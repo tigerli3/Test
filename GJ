@@ -1,0 +1,88 @@
+import csv
+
+def getTimeNo(_macroInfoList, rStartTime, rEndTime, rCourtNum, rIsWeek):
+    # 평일은 7시부터 1번, 주말은 8시부터 1번
+
+    # 시간 [9,10,11,12]
+    startTimeArr = []
+
+    for i in range(rStartTime, rEndTime):
+        startTimeArr.append(i)
+
+    res1234 = ''
+
+    for startTime in startTimeArr:
+        if int(startTime) == 9:
+            timeText = '0' + str(startTime) + '00;' + str(startTime + 1) + '00;'
+        else:
+            timeText = str(startTime) + '00;' + str(startTime + 1) + '00;'
+
+        if rIsWeek == 'N':
+            res1234 += macroInfoList[int(rCourtNum)][startTime - 8] + ';' + str(startTime - 6) + '회;' + timeText + '1|'
+        else:
+            res1234 += macroInfoList[int(rCourtNum)][startTime - 8] + ';' + str(startTime - 7) + '회;' + timeText + '1|'
+
+    return res1234[:-1]
+
+
+if __name__ == '__main__':
+    while True:
+        _startTime = input("시작 시간?(ex 20)")
+        if _startTime.isnumeric() and 9 <= int(_startTime) <= 21:
+            break
+    while True:
+        _endTime = input("종료 시간(?ex 22)?")
+        if _endTime.isnumeric() and int(_startTime) < int(_endTime):
+            break
+    while True:
+        _courtNum = input(
+            "코트?(1~10)\n" + "1: 실내1\n2: 실내2\n3: 실내3\n4: 하드1\n5: 하드2\n6: 하드3\n7: "
+                            "하드4\n8: 하드5\n9: 하드8\n10: 하드9\n==========================\n코트번호 : ")
+        if _courtNum.isnumeric() and 0 < int(_courtNum) <= 10:
+            break
+    while True:
+        _rentDate = input("날짜?(ex 20230830)")
+        if _rentDate.isnumeric():
+            break
+    while True:
+        _isWeekend = input("주말?(Y/N)")
+        if _isWeekend.upper() == 'Y' or _isWeekend.upper() == 'N':
+            break
+
+    with open('macroDatasGajwa.csv', "r", encoding='utf-8-sig') as f:
+        reader = csv.reader(f)
+        macroInfoList = list(reader)
+        macroInfoList = macroInfoList
+
+    _timeText = getTimeNo(macroInfoList, int(_startTime), int(_endTime), int(_courtNum), _isWeekend.upper())
+
+    if int(_courtNum) <= 3:
+        part_cd = '02'
+        place_cd = _courtNum
+    else:
+        part_cd = '03'
+        place_cd = str(int(_courtNum) + 13)
+    res = '<form id="dynForm" action="https://www.icsports.or.kr/fmcs/6" method="post"><input type="hidden" name="action" value="write"><input type="hidden" name="comcd" value="ICGYM"><input type="hidden" name="part_cd" value=' + part_cd + '><input type="hidden" name="place_cd" value=' + place_cd + '><input type="hidden" name="time_no" value="' + _timeText + '"><input type="hidden" name="rent_type" value="1001"><input type="hidden" name="rent_date" value=' + _rentDate + '></form>'
+
+    file = open('macroGJInfos.txt', 'w')
+
+    file.write("==========================================================\n")
+    file.write("Step1. 가좌 로그인 후에 F12 눌러서 아래 코드 복사/붙여넣기\n")
+    file.write("==========================================================\n")
+    file.write("document.body.innerHTML += \'" + res + "\'\n")
+    file.write("document.getElementById(\"dynForm\").submit();\n")
+    file.write("==========================================================\n")
+    file.write("Step2. 페이지 이동 완료되면 아래 코드 복사/붙여넣기\n")
+    file.write("==========================================================\n")
+    file.write("document.getElementById('team_nm').value = \"4\";\n");
+    file.write("document.getElementById('users').value = 1;\n")
+    file.write("document.getElementById('title').value = 1;\n")
+    file.write("document.getElementById('purpose').value = \"1\";\n")
+    file.write("document.getElementById('agree_use1').checked = true;\n")
+    file.write("==========================================================\n")
+    file.write("Step3. 자동 입력 방지 입력 후 확인 클릭 후 아래 코드 복사/붙여넣기 또는 시설 예약 신청 손으로 클릭\n")
+    file.write("document.getElementById('writeBtn').click()\n")
+
+    file.close()
+
+    print("반자동 매크로 코드 생성 완료.\nmacroGJInfos.txt 파일을 확인하세요.")
